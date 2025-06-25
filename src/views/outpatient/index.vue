@@ -166,6 +166,7 @@ import { truncate } from 'fs';
     methods: {
       comfirmdms(val){
         this.comfirmdisabled = false
+        //ceshi
         // this.patient = val
         // this.$refs.record.controlfast()
         getokend(this.patient.registrationId).then(res=>{
