@@ -34,7 +34,7 @@
             placeholder="密码"
             name="password"
             tabindex="2"
-            auto-complete="on"  
+            auto-complete="on"
             @keyup.native="checkCapslock"
             @blur="capsTooltip = false"
             @keyup.enter.native="handleLogin"
@@ -47,7 +47,7 @@
 
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">登录</el-button>
 
-      
+
     </el-form>
 
     <el-dialog title="Or connect with" :visible.sync="showDialog">
@@ -84,7 +84,7 @@ export default {
     }
     return {
       loginForm: {
-        username: '丁聪华',
+        username: '江浩华',
         password: 'test'
       },
       loginRules: {
@@ -153,7 +153,9 @@ export default {
           this.loading = true
           this.$store.dispatch('user/login', this.loginForm)
             .then(() => {
-              this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+              console.log('跳转路径:', this.redirect)
+              // this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+              this.$router.push({ path: '/index' })
               this.loading = false
             })
             .catch(() => {

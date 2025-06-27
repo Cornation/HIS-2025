@@ -1,6 +1,6 @@
 import request from '@/utils/request'
-const baseurl = "http://192.168.243.23:8080/"
-const url2 ="http://192.168.243.23:8080/"
+const baseurl = "http://192.168.75.23:10009/"
+// const url2 ="http://192.168.75.23:9999/"
 // 挂号信息列表
 export function listRegisteredPatient(data) {
   return request({

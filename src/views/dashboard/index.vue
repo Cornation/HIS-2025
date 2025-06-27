@@ -2,7 +2,7 @@
   <!-- 主页 -->
   <div class="dashboard-editor-container">
     <!-- 3个统计模块+1个时间显示 -->
-    <panel-group @handleSetLineChartData="handleSetLineChartData" /> 
+    <panel-group @handleSetLineChartData="handleSetLineChartData" />
 
     <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
       <!-- 线图 -->
@@ -22,7 +22,7 @@
       </el-col>
     </el-row>
 
-    <el-row :gutter="8">
+ <!--   <el-row :gutter="8">
       <el-col :xs="{span: 24}" :sm="{span: 24}" :md="{span: 24}" :lg="{span: 12}" :xl="{span: 12}" style="padding-right:8px;margin-bottom:30px;">
         <transaction-table />
       </el-col>
@@ -32,7 +32,7 @@
       <el-col :xs="{span: 24}" :sm="{span: 12}" :md="{span: 12}" :lg="{span: 6}" :xl="{span: 6}" style="margin-bottom:30px;">
         <box-card />
       </el-col>
-    </el-row>
+    </el-row> -->
   </div>
 </template>
 
@@ -49,7 +49,7 @@ import BoxCard from './components/BoxCard'
 import {staffPatients,deptPatients,totalPatients} from '@/api/charts'
 const lineChartData = {
   newVisitis: {
-    dateOfSevenDays: ["2019-06-20", "2019-06-21", "2019-06-22", "2019-06-23", "2019-06-24", "2019-06-25", "2019-06-26"],
+    dateOfSevenDays: ["2025-06-20", "2025-06-21", "2025-06-22", "2025-06-23", "2025-06-24", "2025-06-25", "2025-06-26"],
     numOfPatients: [0, 0, 0, 0, 0, 0, 0]
   },
   messages: {

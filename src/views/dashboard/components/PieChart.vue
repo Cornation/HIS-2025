@@ -1,64 +1,50 @@
 <template>
-  <div :class="className" :style="{height:height,width:width}" />
+  <div :class="className" :style="{ height: height, width: width }" />
 </template>
 
 <script>
-import echarts from 'echarts'
-require('echarts/theme/macarons') // echarts theme
+import * as echarts from 'echarts'
+require('echarts/theme/macarons') // 需要确保 macarons 存在
 import resize from './mixins/resize'
-import {staffClassifyStatistics} from '@/api/charts'
+import { staffClassifyStatistics } from '@/api/charts'
+
 export default {
   mixins: [resize],
   props: {
-    className: {
-      type: String,
-      default: 'chart'
-    },
-    width: {
-      type: String,
-      default: '100%'
-    },
-    height: {
-      type: String,
-      default: '300px'
-    }
+    className: { type: String, default: 'chart' },
+    width: { type: String, default: '100%' },
+    height: { type: String, default: '300px' }
   },
   data() {
     return {
-      amountCat:[],
-      amount:[],
-      amountMap:[],
       chart: null
     }
   },
   mounted() {
-    this.$nextTick(() => {
-      this.initChart()
-    })
+    this.loadData()
   },
   beforeDestroy() {
-    if (!this.chart) {
-      return
+    if (this.chart) {
+      this.chart.dispose()
     }
-    this.chart.dispose()
     this.chart = null
   },
   methods: {
-    staffClassifyStatistics(){
-      
-    },
-    initChart() {
-      staffClassifyStatistics(this.$store.getters.id).then(res=>{
-        this.amountCat = res.data.amountCat
-        this.amount = res.data.amount
-        let i =0 
-        for(;i<this.amountCat.length;i++){
-          let temp = {}
-          temp.value = this.amount[i]
-          temp.name = this.amountCat[i]
-          this.amountMap.push(temp)
+    async loadData() {
+      try {
+        const res = await staffClassifyStatistics(this.$store.getters.id)
+        const { amountCat = [], amount = [] } = res.data || {}
+
+        if (!amountCat.length || !amount.length) {
+          console.warn("📭 没有图表数据")
+          return
         }
-     
+
+        const chartData = amountCat.map((name, i) => ({
+          name,
+          value: amount[i] || 0
+        }))
+
         this.chart = echarts.init(this.$el, 'macarons')
         this.chart.setOption({
           tooltip: {
@@ -68,12 +54,12 @@ export default {
           legend: {
             left: 'center',
             bottom: '10',
-            data: this.amountCat
+            data: amountCat
           },
-          title:{
-            left:'left',
-            text:'七日分类费用统计',
-            fontSize:1
+          title: {
+            left: 'left',
+            text: '七日分类费用统计',
+            fontSize: 1
           },
           series: [
             {
@@ -82,13 +68,15 @@ export default {
               roseType: 'radius',
               radius: [15, 95],
               center: ['50%', '38%'],
-              data:this.amountMap,
+              data: chartData,
               animationEasing: 'cubicInOut',
               animationDuration: 2600
             }
           ]
         })
-      })
+      } catch (e) {
+        console.error("❌ 图表数据加载失败", e)
+      }
     }
   }
 }
