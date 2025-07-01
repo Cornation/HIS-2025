@@ -27,7 +27,7 @@
             v-model="dmsRegistrationParam.dateOfBirth"
             align="right"
             type="date"
-            placeholder="选择日期">  
+            placeholder="选择日期">
           </el-date-picker>
         </el-form-item>
         <el-form-item style="width:300px" label="性别">
@@ -59,7 +59,7 @@
             v-model="dmsRegistrationParam.attendanceDate"
             align="right"
             type="date"
-            placeholder="选择日期">  
+            placeholder="选择日期">
           </el-date-picker>
         </el-form-item>
         <el-form-item style="width:300px" label="午别">
@@ -93,7 +93,7 @@
         <el-form-item style="margin-left:940px">
           <el-button type="primary" @click="createRegistration">挂号&打印发票</el-button>
         </el-form-item>
-        
+
       </el-form>
 
       </transition>
@@ -225,6 +225,12 @@
     <el-button type="primary" @click="charge">缴费</el-button>
     <el-button type="danger" @click="dialogFormVisible=false">取消</el-button>
   </div>
+  <MiDialog
+    v-if="showMiDialog"
+    :certNo="currentPatientCertNo"
+    :totalAmount="totalamount"
+    @close="showMiDialog = false"
+  />
   <div v-show="refundVisible" style="text-align:center">
     <el-form :model="onepatient" label-width="80px"  label-position="left" :inline="true">
       <el-form-item label="病历号" prop="id" label-width="60px">
@@ -345,6 +351,7 @@ import {selectPatientByIdNo} from '@/api/outpatient/patient'
 import {getAllReg} from '@/api/admin'
 import {parseTime,formatTime,deepClone} from '@/utils'
 import { format } from 'path';
+import MiDialog from '../registWork/compo/MiDialog.vue'
 const defaultpatient ={
   id:"",
   name:"",
@@ -363,6 +370,9 @@ const defaultpatient ={
   kemu:""
 }
 export default {
+  components: {
+    MiDialog
+  },
   data(){
     return{
       re1:'',
@@ -437,6 +447,9 @@ export default {
           label:'其他'
         }
       ],
+      showMiDialog: false,
+      currentPatientCertNo: '530122199802262347', // 应该替换为病人的真实身份证号变量
+      totalamount: 5, // 总费用，替换成你实际绑定的数据
       onepatient:Object.assign({},defaultpatient),
       radio:1,
       dialogFormVisible:false,
@@ -521,7 +534,7 @@ export default {
             this.dmsRegistrationParam.age = res.data.age
             this.dmsRegistrationParam.homeAddress = res.data.homeAddress
             this.dmsRegistrationParam.gender = res.data.gender
-            this.dmsRegistrationParam.phoneNo = res.data.phoneNo  
+            this.dmsRegistrationParam.phoneNo = res.data.phoneNo
             this.dmsRegistrationParam.identificationNo = value
             console.log(this.dmsRegistrationParam)
             this.$message({
@@ -544,7 +557,7 @@ export default {
           type: 'success',
           duration: 2000
          })
-         this.refundregistVisible = false 
+         this.refundregistVisible = false
           this.listRegisteredPatient()
       })
     },
@@ -560,7 +573,7 @@ export default {
           type: 'warning',
           duration: 2000
         })
-          return 
+          return
       }
       let flag = 1
       let inv = ''
@@ -583,7 +596,7 @@ export default {
             type: 'warning',
             duration: 2000
           })
-          return 
+          return
         }
         item.newInvoiceNo = this.invoiceNo+1
         item.redInvoiceNo = this.invoiceNo
@@ -604,35 +617,47 @@ export default {
       this.refundregistVisible = false
       this.listRegisteredPatient()
     },
-    charge(){
-      if(this.invoiceNo===''||this.invoiceNo===undefined||this.settlementCatId===''||this.settlementCatId===undefined)
-      {
+    charge() {
+      if (
+        this.invoiceNo === '' ||
+        this.invoiceNo === undefined ||
+        this.settlementCatId === '' ||
+        this.settlementCatId === undefined
+      ) {
         this.$notify({
           title: '信息不完整',
           message: '请填写发票号或选择缴费类型！',
           type: 'danger',
           duration: 2000
-         })
+        })
         return
       }
+
+      // 如果是医保支付，弹出医保支付弹窗，不直接缴费
+      if (this.settlementCatId === '3') {
+        console.log("医保")
+        this.showMiDialog = true // 控制医保弹窗显示
+        return
+      }
+
+      // 非医保支付正常缴费流程
       let data = this.refs
-      data.forEach(item=>{
+      data.forEach(item => {
         item.chargeItemId = item.id
         item.invoiceNo = this.invoiceNo
         item.opratorId = this.$store.getters.id
         item.settlementCatId = this.settlementCatId
       })
-      charge(data).then(res=>{
+      charge(data).then(res => {
         this.$notify({
           title: '成功',
           message: '缴费成功',
           type: 'success',
           duration: 2000
-         })
-        this.dialogFormVisible=false
+        })
+        this.dialogFormVisible = false
         this.listRegisteredPatient()
       })
-      
     },
     handlechange(val){
       this.refs = val

@@ -52,10 +52,13 @@ const actions = {
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), password: password }).then(response => {
         const { data } = response
+        console.log(data.tokenHead,",")
         commit('SET_TOKEN', data.tokenHead+data.token)
         setToken(data.tokenHead+data.token)
         resolve()
+        console.log(setToken)
       }).catch(error => {
+        console.log(setToken)
         reject(error)
       })
     })
