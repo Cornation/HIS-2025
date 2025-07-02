@@ -123,7 +123,7 @@
         <template slot-scope="scope">
           <el-tag v-if="scope.row.registrationStatus===1" type="primary">未看诊</el-tag>
           <el-tag v-if="scope.row.registrationStatus===4" type="danger">已退号</el-tag>
-          <el-tag v-if="scope.row.registrationStatus===2" type="warning">待收费</el-tag>
+          <el-tag v-if="scope.row.registrationStatus===2" type="warning">就诊中</el-tag>
           <el-tag v-if="scope.row.registrationStatus===3" type="success">诊毕</el-tag>
         </template>
       </el-table-column>
@@ -230,7 +230,9 @@
     :certNo="currentPatientCertNo"
     :totalAmount="totalamount"
     @close="showMiDialog = false"
+    @settle-success="handleMiPaySuccess"
   />
+
   <div v-show="refundVisible" style="text-align:center">
     <el-form :model="onepatient" label-width="80px"  label-position="left" :inline="true">
       <el-form-item label="病历号" prop="id" label-width="60px">
@@ -448,8 +450,8 @@ export default {
         }
       ],
       showMiDialog: false,
-      currentPatientCertNo: '530122199802262347', // 应该替换为病人的真实身份证号变量
-      totalamount: 5, // 总费用，替换成你实际绑定的数据
+      currentPatientCertNo: '', // 应该替换为病人的真实身份证号变量
+      totalamount: 0, // 总费用，替换成你实际绑定的数据
       onepatient:Object.assign({},defaultpatient),
       radio:1,
       dialogFormVisible:false,
@@ -632,10 +634,12 @@ export default {
         })
         return
       }
-
+      console.log(this.refs)
       // 如果是医保支付，弹出医保支付弹窗，不直接缴费
       if (this.settlementCatId === '3') {
         console.log("医保")
+        this.currentPatientCertNo = this.onepatient.patientId ||
+                                         (this.refs[0] && this.refs[0].identificationNo) || '';
         this.showMiDialog = true // 控制医保弹窗显示
         return
       }
@@ -658,6 +662,34 @@ export default {
         this.dialogFormVisible = false
         this.listRegisteredPatient()
       })
+    },
+    async handleMiPaySuccess() {
+      this.$message.success('医保支付成功，正在更新状态...')
+      this.showMiDialog = false
+
+      // 组装缴费数据，保证字段名和接口要求一致
+      let data = this.refs.map(item => ({
+        amount: item.amount || 0,
+        chargeItemId: item.id,
+        invoiceNo: this.invoiceNo || '',
+        operatorId: this.$store.getters.id || 0,
+        settlementCatId: Number(this.settlementCatId) || 0,
+        type: item.type || 0
+      }))
+
+      try {
+        const res = await charge(data)
+        if (res && res.code === 200) {
+          this.$message.success('医保支付状态更新成功')
+          this.dialogFormVisible = false
+          this.listRegisteredPatient()
+        } else {
+          this.$message.error(res.message || '状态更新失败')
+        }
+      } catch (error) {
+        this.$message.error('调用缴费接口失败')
+        console.error(error)
+      }
     },
     handlechange(val){
       this.refs = val
@@ -759,11 +791,11 @@ export default {
     listRegisteredPatient(){
       listRegisteredPatient(this.queryRegister).then(res=>{
         this.RegisterList = res.data.list
+        console.log("RegisterList,",this.RegisterList)
         this.RegisterList.forEach(item=>{
           item.patientDateOfBirth = item.patientDateOfBirth.substr(0,10)
           item.attendanceDate = item.attendanceDate.substr(0,10)
         })
-        console.log(this.RegisterList)
         this.total = res.data.total
       })
     },
@@ -772,7 +804,7 @@ export default {
     },
     handlepay(row){
       this.onepatient = deepClone(row)
-      console.log(this.onepatient)
+      console.log("this.onepatient",this.onepatient)
       listChargeByRegistrationId(row.registrationId).then(res=>{
         this.paylist = res.data
         this.paylist.forEach(item=>{

@@ -1,5 +1,5 @@
 import request from '@/utils/request'
-const baseurl = "http://172.20.10.2:10009/"
+const baseurl = "http://172.20.10.2:9999/"
 // 挂号信息列表
 export function listRegisteredPatient(data) {
   return request({
